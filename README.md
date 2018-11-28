@@ -17,7 +17,7 @@ thoroughly so that you don't overlook something!
 2. Rule Text Parsing and save to Mysql Database ( Detecting Rules )
 3. =)
 
-Connection Mysql Database using DBI Module
+### Connection Mysql Database using DBI Module
 1. Changes $user and $password
 2. Create Database "sfsnort" from Sample_sfsnort.sql
 3. Install DBI Module
