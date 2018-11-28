@@ -24,9 +24,9 @@ thoroughly so that you don't overlook something!
 ~~~~
 # yum -y install perl-DBI perl-DBD-MySQL
 # perl -MCPAN -e shell
-# install Parse::Snort
-# install UUID::Object
-# install UUID::Generator::PurePerl
+> install Parse::Snort
+> install UUID::Object
+> install UUID::Generator::PurePerl
 ~~~~
 4. Enjoy
 
