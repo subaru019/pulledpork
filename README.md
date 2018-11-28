@@ -23,10 +23,22 @@ thoroughly so that you don't overlook something!
 3. Install DBI Module
 ~~~~
 # yum -y install perl-DBI perl-DBD-MySQL
-# perl -MCPAN -e shell
-> install Parse::Snort
-> install UUID::Object
-> install UUID::Generator::PurePerl
+# cd ~/
+# wget https://cpan.metacpan.org/authors/id/B/BA/BANB/UUID-Object-0.81.tar.gz
+# wget https://cpan.metacpan.org/authors/id/B/BA/BANB/UUID-Generator-PurePerl-0.05.tar.gz
+# wget https://cpan.metacpan.org/authors/id/R/RH/RHARMAN/Parse-Snort-0.9.tar.gz
+# tar xvzf UUID-Object-0.81.tar.gz
+# cd UUID-Object-0.81
+# perl Makefile.PL
+# make && make install
+# tar xvzf UUID-Generator-PurePerl-0.05.tar.gz
+# cd UUID-Generator-PurePerl-0.05
+# perl Makefile.PL
+# make && make install
+# tar xvzf Parse-Snort-0.9.tar.gz
+# cd Parse-Snort-0.9
+# perl Makefile.PL
+# make && make install
 ~~~~
 4. Enjoy
 
