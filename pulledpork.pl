@@ -1538,11 +1538,11 @@ sub mysql_insert {
       my @meta_arr = split(/,/, ${$option}[1]);
       foreach my $meta_str (@meta_arr){
         $meta_str =~ s/^\s+//;
-        print "($k1:$k2) -> metadata : $meta_str\n";
+        #print "($k1:$k2) -> metadata : $meta_str\n";
         my @meta_pv_arr = split(/\s+/, $meta_str);
         foreach my $meta_pv_str (@meta_pv_arr) {
           $meta_pv_str =~ s/^\s+//;
-          print "($k1:$k2) -> meta : $meta_pv_str\n";
+          #print "($k1:$k2) -> meta : $meta_pv_str\n";
           if($meta_pv_str eq 'rule-type') {
             $classchange = 1;
           }
@@ -1578,8 +1578,8 @@ sub mysql_insert {
   return $rule->as_string();
 }
 
+## Generate UUID and Connection Mysql Database using DBI Module
 sub generate_global_uuid {
-  # IF In Defined Object -> DBI Connection -> test ok
   my ($dbh) = @_;
   my $index_ug = UUID::Generator::PurePerl->new();
   my $index_uuid = $index_ug->generate_v4();
@@ -1588,7 +1588,6 @@ sub generate_global_uuid {
   $sth_insert_SRU_index->execute(time, $SRU_name, $index_uuid);
   $sth_insert_SRU_index->finish;
   return $index_uuid;
-  # END IF
 }
 
 ## Make some changelog fun!
