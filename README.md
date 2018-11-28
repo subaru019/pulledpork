@@ -21,11 +21,13 @@ Connection Mysql Database using DBI Module
 1. Changes $user and $password
 2. Create database "sfsnort" sample .sql
 3. Install DBI Module
-    (1) # yum -y install perl-DBI perl-DBD-MySQL
-    (2) # perl -MCPAN -e shell
-    (3) # install Parse::Snort
-    (4) # install UUID::Object
-    (5) # install UUID::Generator::PurePerl
+~~~~
+# yum -y install perl-DBI perl-DBD-MySQL
+# perl -MCPAN -e shell
+# install Parse::Snort
+# install UUID::Object
+# install UUID::Generator::PurePerl
+~~~~
 4. Enjoy
 
 ~~~~
