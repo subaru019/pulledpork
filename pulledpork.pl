@@ -37,6 +37,10 @@ use POSIX qw(:errno_h);
 use Cwd;
 use Carp;
 use Data::Dumper;
+use POSIX qw(strftime);
+use Parse::Snort;
+use DBI;
+use UUID::Generator::PurePerl;
 
 ### Vars here
 
@@ -1468,6 +1472,125 @@ sub flowbit_set {
     return $counter;
 }
 
+## Connection Mysql Database using DBI Module
+# 1. Changes $user and $password
+# 2. Create database "sfsnort" sample .sql
+# 3. Install DBI Module
+#    (1) # yum -y install perl-DBI perl-DBD-MySQL
+#    (2) # perl -MCPAN -e shell
+#    (3) # install Parse::Snort
+#    (4) # install UUID::Object
+#    (5) # install UUID::Generator::PurePerl
+# 4. Enjoy
+##
+sub mysql_connect {
+  my $database = 'sfsnort';
+  my $hostname = 'localhost';
+  my $port = '3306';
+  my $dsn = "DBI:mysql:database=$database;host=$hostname;port=$port";
+  my $user = '****';
+  my $password = "*****";
+  my $dbh = DBI->connect($dsn, $user, $password, {
+      AutoCommit => 1,
+      PrintError => 0,
+      RaiseError => 1,
+      ShowErrorStatement => 1,
+      AutoInactiveDestroy => 1,
+  }) or die "cannot connect to MySQL: $DBI::errstr";
+  return $dbh;
+}
+
+## Connection Mysql Database using DBI Module
+sub mysql_insert {
+  my ($rule_text, $k1, $k2, $type, $dbh, $index_uuid) = @_;
+  my $sth_insert_rule_header = $dbh->prepare("INSERT INTO rule_header(action,proto,sip,sport,dip,dport,diroperator,category,gid,sid,revision,uuid,msg,rule_text) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)") or die $dbh->errstr;
+  my $sth_insert_SRU_import_log = $dbh->prepare("INSERT INTO SRU_import_log(time, type, name, gid, sid, rev, SRU_uuid, rule_text) VALUES(?,?,?,?,?,?,?,?)") or die $dbh->errstr;
+  my $sth_insert_rule_opts = $dbh->prepare("INSERT INTO rule_opts(gid, sid, revision, options, args, ord, uuid) VALUES(?,?,?,?,?,?,?)") or die $dbh->errstr;
+  my $sth_update_deleted_flag = $dbh->prepare("UPDATE rule_header rh, rule_opts ro SET rh.deleted=1, ro.deleted=1 where rh.gid=? and ro.gid=? and rh.sid=? and ro.sid=?") or die $dbh->errstr;
+  my $rule = Parse::Snort->new();
+  $rule->parse($rule_text);
+  my $parse_rule_action = $rule->action();
+  my $parse_rule_state = $rule->state();
+  my $parse_rule_proto = $rule->proto();
+  my $parse_rule_sip = $rule->src();
+  my $parse_rule_sport = $rule->src_port();
+  my $parse_rule_dip = $rule->dst();
+  my $parse_rule_dport = $rule->dst_port();
+  my $parse_rule_dir = $rule->direction();
+  my $parse_rule_rev = $rule->rev();
+  my $parse_rule_msg = $rule->msg();
+  my $ug = UUID::Generator::PurePerl->new();
+  my $uuid = $ug->generate_v4();
+
+  my $rule_category = $parse_rule_msg;
+  my @parse_rule_category; undef @parse_rule_category;
+  $rule_category =~ s/"//g;
+  @parse_rule_category = split(/\s+/, $rule_category);
+  $rule_category = lc $parse_rule_category[0];
+
+  $rule_text =~ s/(^#\salert\s+)|(^#alert\s+)|(^alert\s+)//;
+  my $arr_ref = $rule->opts();
+  my $ord = 0;
+  my $classchange = 0;
+
+  foreach my $option (@$arr_ref) {
+    if(${$option}[0] eq 'metadata'){
+      my @meta_arr = split(/,/, ${$option}[1]);
+      foreach my $meta_str (@meta_arr){
+        $meta_str =~ s/^\s+//;
+        print "($k1:$k2) -> metadata : $meta_str\n";
+        my @meta_pv_arr = split(/\s+/, $meta_str);
+        foreach my $meta_pv_str (@meta_pv_arr) {
+          $meta_pv_str =~ s/^\s+//;
+          print "($k1:$k2) -> meta : $meta_pv_str\n";
+          if($meta_pv_str eq 'rule-type') {
+            $classchange = 1;
+          }
+          if($classchange and $meta_pv_str eq 'decode') {
+            $rule_category = 'decoder';
+          }
+          if($classchange and $meta_pv_str eq 'preproc') {
+            $rule_category = 'preprocessor';
+          }
+        }
+      }
+    }
+    #print "${$option}[0]".":"."${$option}[1]"."\n";
+    if($type eq 'NEW'){
+      $sth_insert_rule_opts->execute($k1, $k2, $parse_rule_rev, ${$option}[0], ${$option}[1], $ord, $uuid);
+      $sth_insert_rule_opts->finish;
+      $ord++;
+    }
+
+  }
+  if($type eq 'NEW'){
+    $sth_insert_rule_header->execute($parse_rule_action, $parse_rule_proto, $parse_rule_sip, $parse_rule_sport, $parse_rule_dip, $parse_rule_dport, $parse_rule_dir, $rule_category, $k1, $k2, $parse_rule_rev, $uuid, $parse_rule_msg, $rule_text);
+    $sth_insert_rule_header->finish;
+  }
+  if($type eq 'DEL'){
+    $sth_update_deleted_flag->execute($k1, $k1, $k2, $k2);
+    $sth_update_deleted_flag->finish;
+  }
+  $sth_insert_SRU_import_log->execute(time, $type, $parse_rule_msg, $k1, $k2, $parse_rule_rev, $index_uuid, $rule_text);
+  $sth_insert_SRU_import_log->finish;
+
+  $rule->state('1');
+  return $rule->as_string();
+}
+
+sub generate_global_uuid {
+  # IF In Defined Object -> DBI Connection -> test ok
+  my ($dbh) = @_;
+  my $index_ug = UUID::Generator::PurePerl->new();
+  my $index_uuid = $index_ug->generate_v4();
+  my $sth_insert_SRU_index = $dbh->prepare("INSERT INTO SRU_index(time, name, SRU_uuid) VALUES(?, ?, ?)") or die $dbh->errstr;
+  my $SRU_name = "Snort Rule Update ".strftime("%Y %m %d", localtime())." 001 vrt";
+  $sth_insert_SRU_index->execute(time, $SRU_name, $index_uuid);
+  $sth_insert_SRU_index->finish;
+  return $index_uuid;
+  # END IF
+}
+
 ## Make some changelog fun!
 sub changelog {
     my ($changelog, $new_hash, $old_hash, $blacklist_hash, $ips_policy,
@@ -1475,30 +1598,65 @@ sub changelog {
         = @_;
 
     print "Writing $changelog....\n" if !$Quiet;
-    my (@newsids, @delsids);
+    my (@newsids, @delsids, @modsids);
     undef @newsids;
     undef @delsids;
+    undef @modsids;
     my $rt       = 0;
     my $dt       = 0;
+    my $mt       = 0;
     my $dropped  = 0;
     my $enabled  = 0;
     my $disabled = 0;
     my $ips      = 0;
+    my $dbh      = mysql_connect();
+    my $index_uuid; undef $index_uuid;
 
     foreach my $k1 (keys %$new_hash) {
-
         foreach my $k2 (keys %{ $$new_hash{$k1} }) {
             next if (($enonly) && ($$new_hash{$k1}{$k2}{'rule'} =~ /^\s*#/));
             if (!defined $$old_hash{$k1}{$k2}{'rule'}) {
                 my $msg_holder = $$new_hash{$k1}{$k2}{'rule'};
+                my $org_rule_text = $msg_holder;
+
                 if ($msg_holder =~ /msg:"[^"]+";/i) {
                     $msg_holder = $&;
                     $msg_holder =~ s/msg:"//;
                     $msg_holder =~ s/";//;
                 }
                 else { $msg_holder = "Unknown MSG" }
-                push(@newsids, "$msg_holder ($k1:$k2)");
+                unless (defined $index_uuid){
+                  $index_uuid = generate_global_uuid($dbh);
+                }
+
+                my $rule_text = mysql_insert($org_rule_text, $k1, $k2, "NEW", $dbh, $index_uuid);
+                push(@newsids, "\"$k1\",\"$k2\",\"$rule_text\"");
+
             }
+      	    my $old_rule = $$old_hash{$k1}{$k2}{'rule'};
+      	    my $new_rule = $$new_hash{$k1}{$k2}{'rule'};
+      	    unless(!defined $old_rule){
+          		$old_rule =~ s/\r//;
+          		$old_rule =~ s/\n//;
+      	    }
+      	    if (defined $new_rule and defined $old_rule and $old_rule ne $new_rule){
+      	    	$mt++;
+              my $msg_holder = $$new_hash{$k1}{$k2}{'rule'};
+              my $org_rule_text = $msg_holder;
+
+              if ($msg_holder =~ /msg:"[^"]+";/i) {
+                  $msg_holder = $&;
+                  $msg_holder =~ s/msg:"//;
+                  $msg_holder =~ s/";//;
+              }
+              else { $msg_holder = "Unknown MSG" }
+              unless (defined $index_uuid){
+                $index_uuid = generate_global_uuid($dbh);
+              }
+              my $rule_text = mysql_insert($org_rule_text, $k1, $k2, "MOD", $dbh, $index_uuid);
+              push(@modsids, "\"$k1\",\"$k2\",\"$rule_text\"");
+
+      	    }
             $rt++ unless defined $$old_hash{$k1}{$k2}{'rule'};
             next  unless defined $$new_hash{$k1}{$k2}{'rule'};
             if ($$new_hash{$k1}{$k2}{'rule'} =~ /^\s*(alert|pass)/) {
@@ -1520,14 +1678,21 @@ sub changelog {
             next
                 if (($enonly) && ($$old_hash{$k1}{$k2}{'rule'} =~ /^\s*#/));
             my $msg_holder = $$old_hash{$k1}{$k2}{'rule'};
+            my $org_rule_text = $msg_holder;
+
             if ($msg_holder =~ /msg:"[^"]+";/) {
                 $msg_holder = $&;
                 $msg_holder =~ s/msg:"//;
                 $msg_holder =~ s/";//;
             }
             else { $msg_holder = "Unknown MSG" }
-            push(@delsids, "$msg_holder ($k1:$k2)");
+            unless (defined $index_uuid){
+              $index_uuid = generate_global_uuid($dbh);
+            }
+            my $rule_text = mysql_insert($org_rule_text, $k1, $k2, "DEL", $dbh, $index_uuid);
+            push(@delsids, "\"$k1\",\"$k2\",\"$rule_text\"");
             $dt++;
+
         }
     }
     if (%$blacklist_hash) {
@@ -1548,13 +1713,17 @@ sub changelog {
         print WRITE "\nNew Rules\n" if @newsids;
         @newsids = sort(@newsids);
         @delsids = sort(@delsids);
+	      @modsids = sort(@modsids);
         foreach (@newsids) { print WRITE "\t" . $_ . "\n"; }
         print WRITE "\nDeleted Rules\n" if @delsids;
         foreach (@delsids) { print WRITE "\t" . $_ . "\n"; }
+	      print WRITE "\nModified Rules\n" if @modsids;
+	      foreach (@modsids) { print WRITE "\t" . $_ . "\n"; }
         print WRITE "\nSet Policy: $ips_policy\n" if $ips_policy;
         print WRITE "\nRule Totals\n";
         print WRITE "\tNew:-------$rt\n";
         print WRITE "\tDeleted:---$dt\n";
+        print WRITE "\tModified:---$mt\n";
         print WRITE "\tEnabled:---$enabled\n";
         print WRITE "\tDropped:---$dropped\n";
         print WRITE "\tDisabled:--$disabled\n";
@@ -1575,6 +1744,7 @@ sub changelog {
             print "Rule Stats...\n";
             print "\tNew:-------$rt\n";
             print "\tDeleted:---$dt\n";
+            print "\tModified:---$mt\n";
             print "\tEnabled Rules:----$enabled\n";
             print "\tDropped Rules:----$dropped\n";
             print "\tDisabled Rules:---$disabled\n";
@@ -1589,8 +1759,10 @@ sub changelog {
         print "Please review $sid_changelog for additional details\n"
             if $sid_changelog;
     }
+    $dbh->disconnect() or die;
     undef @newsids;
     undef @delsids;
+    undef @modsids;
 }
 
 ## Trim it up, loves the trim!
@@ -1681,7 +1853,7 @@ sub archive {
     my ($data, $filename) = @_;
     my @records;
     my $compression = "COMPRESS_GZIP";
-    $filename .= "." . time() . ".tgz";
+    $filename .= "." . strftime("%Y%m%d-%H%M%S", localtime()) . ".tgz";
     print "Creating backup at: $filename\n" unless $Quiet;
     foreach my $record (@$data) {
         if (-f $record) {
