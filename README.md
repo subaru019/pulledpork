@@ -28,14 +28,15 @@ Connection Mysql Database using DBI Module
     (5) # install UUID::Generator::PurePerl
 4. Enjoy
 
-`# ************************************************************
-# DB: MySQL 5.5.5-10.3.10-MariaDB
-# Database Name: sfsnort
-# ************************************************************
+~~~~
+************************************************************
+DB: MySQL 5.5.5-10.3.10-MariaDB`
+Database Name: sfsnort
+************************************************************
 
-# Table Dump rule_header
-# ------------------------------------------------------------
-`
+Table Dump rule_header
+------------------------------------------------------------
+
 
 DROP TABLE IF EXISTS `rule_header`;
 
@@ -112,3 +113,5 @@ CREATE TABLE `SRU_index` (
   `SRU_uuid` varchar(36) DEFAULT NULL,
   `finished` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+~~~~
