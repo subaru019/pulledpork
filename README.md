@@ -17,26 +17,25 @@ thoroughly so that you don't overlook something!
 2. Rule Text Parsing and save to Mysql Database ( Detecting Rules )
 3. =)
 
-## Connection Mysql Database using DBI Module
-# 1. Changes $user and $password
-# 2. Create database "sfsnort" sample .sql
-# 3. Install DBI Module
-#    (1) # yum -y install perl-DBI perl-DBD-MySQL
-#    (2) # perl -MCPAN -e shell
-#    (3) # install Parse::Snort
-#    (4) # install UUID::Object
-#    (5) # install UUID::Generator::PurePerl
-# 4. Enjoy
-##
+Connection Mysql Database using DBI Module
+1. Changes $user and $password
+2. Create database "sfsnort" sample .sql
+3. Install DBI Module
+    (1) # yum -y install perl-DBI perl-DBD-MySQL
+    (2) # perl -MCPAN -e shell
+    (3) # install Parse::Snort
+    (4) # install UUID::Object
+    (5) # install UUID::Generator::PurePerl
+4. Enjoy
 
-# ************************************************************
+`# ************************************************************
 # DB: MySQL 5.5.5-10.3.10-MariaDB
 # Database Name: sfsnort
 # ************************************************************
 
-
 # Table Dump rule_header
 # ------------------------------------------------------------
+`
 
 DROP TABLE IF EXISTS `rule_header`;
 
