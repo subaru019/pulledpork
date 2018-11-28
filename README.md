@@ -19,7 +19,7 @@ thoroughly so that you don't overlook something!
 
 Connection Mysql Database using DBI Module
 1. Changes $user and $password
-2. Create database "sfsnort" sample .sql
+2. Create Database "sfsnort" from Sample_sfsnort.sql
 3. Install DBI Module
 ~~~~
 # yum -y install perl-DBI perl-DBD-MySQL
@@ -55,6 +55,8 @@ Perl:
 DB: MySQL 5.5.5-10.3.10-MariaDB
 Database Name: sfsnort
 ************************************************************
+
+Sample_sfsnort.sql
 
 Table Dump rule_header
 ------------------------------------------------------------
@@ -140,6 +142,8 @@ CREATE TABLE `SRU_index` (
 
 ## Appendix
 ~~~~
+# mysql -u root -p
+> CREATE DATABASE sfsnort;
 # mkdir -p /var/log/snort/
 # chmod a+x /usr/local/bin/pulledpork/pulledpork.pl
 ~~~~
