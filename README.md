@@ -30,9 +30,29 @@ Connection Mysql Database using DBI Module
 ~~~~
 4. Enjoy
 
+
 ~~~~
 ************************************************************
-DB: MySQL 5.5.5-10.3.10-MariaDB`
+OS: CentOS Linux release 7.5.1804 (Core)
+Snort:    
+   ,,_     -*> Snort! <*-
+  o"  )~   Version 2.9.11 GRE (Build 125)
+   ''''    By Martin Roesch & The Snort Team: http://www.snort.org/contact#team
+           Copyright (C) 2014-2017 Cisco and/or its affiliates. All rights reserved.
+           Copyright (C) 1998-2013 Sourcefire, Inc., et al.
+           Using libpcap version 1.5.3
+           Using PCRE version: 8.32 2012-11-30
+           Using ZLIB version: 1.2.7
+Perl:
+    This is perl 5, version 16, subversion 3 (v5.16.3) built for x86_64-linux-thread-multi
+    (with 33 registered patches, see perl -V for more detail)
+    Copyright 1987-2012, Larry Wall
+    Perl may be copied only under the terms of either the Artistic License or the
+    GNU General Public License, which may be found in the Perl 5 source kit.
+    Complete documentation for Perl, including FAQ lists, should be found on
+    this system using "man perl" or "perldoc perl".  If you have access to the
+    Internet, point your browser at http://www.perl.org/, the Perl Home Page.
+DB: MySQL 5.5.5-10.3.10-MariaDB
 Database Name: sfsnort
 ************************************************************
 
@@ -117,3 +137,27 @@ CREATE TABLE `SRU_index` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ~~~~
+
+## Appendix
+~~~~
+# mkdir -p /var/log/snort/
+# chmod a+x /usr/local/bin/pulledpork/pulledpork.pl
+~~~~
+
+### Standard Processing
+~~~~
+# /usr/local/bin/pulledpork/pulledpork.pl -c /etc/snort/pulledpork.conf -h /var/log/snort/sid_changes.log.`date "+%Y%m%d-%H%M%S"`
+~~~~
+
+### Test Processing (TALOS SNORT.ORG rules not being updated)
+~~~~
+1. Download Only (Using -g Option) Not Process
+# /usr/local/bin/pulledpork/pulledpork.pl -c /etc/snort/pulledpork.conf -h /var/log/snort/sid_changes.log.`date "+%Y%m%d-%H%M%S"` -g
+2. Testing New Rule Detection
+# vi /etc/snort/snort.rules
+ Appropriately delete lines (ex. dd)
+3. Processing Only (Using -P Option)
+# /usr/local/bin/pulledpork/pulledpork.pl -c /etc/snort/pulledpork.conf -h /var/log/snort/sid_changes.log.`date "+%Y%m%d-%H%M%S"` -P
+~~~~
+
+Please notify me know if you know of any better method than the mentioned above.
