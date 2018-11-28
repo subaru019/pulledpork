@@ -145,6 +145,7 @@ CREATE TABLE `SRU_index` (
 # mysql -u root -p
 > CREATE DATABASE sfsnort;
 # mkdir -p /var/log/snort/
+# mkdir -p /var/log/snort/rules/
 # chmod a+x /usr/local/bin/pulledpork/pulledpork.pl
 ~~~~
 
