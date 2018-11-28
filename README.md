@@ -31,14 +31,17 @@ thoroughly so that you don't overlook something!
 # cd UUID-Object-0.81
 # perl Makefile.PL
 # make && make install
+# cd ~/
 # tar xvzf UUID-Generator-PurePerl-0.05.tar.gz
 # cd UUID-Generator-PurePerl-0.05
 # perl Makefile.PL
 # make && make install
+# cd ~/
 # tar xvzf Parse-Snort-0.9.tar.gz
 # cd Parse-Snort-0.9
 # perl Makefile.PL
 # make && make install
+# cd ~/
 ~~~~
 4. Enjoy
 
