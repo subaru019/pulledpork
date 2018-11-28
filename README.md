@@ -20,7 +20,7 @@ thoroughly so that you don't overlook something!
 ### Connection Mysql Database using DBI Module
 1. Change $password strings, pulledpork.pl LINE 1492 (mysql_connect)
 2. Create Database "sfsnort" from Sample_sfsnort.sql
-3. Install DBI Module
+3. Install DBI Module and Other Modules
 ~~~~
 # yum -y install perl-DBI perl-DBD-MySQL
 # cd ~/
