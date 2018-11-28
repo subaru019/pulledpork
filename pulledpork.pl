@@ -1488,8 +1488,8 @@ sub mysql_connect {
   my $hostname = 'localhost';
   my $port = '3306';
   my $dsn = "DBI:mysql:database=$database;host=$hostname;port=$port";
-  my $user = '****';
-  my $password = "*****";
+  my $user = 'root';
+  my $password = "********";
   my $dbh = DBI->connect($dsn, $user, $password, {
       AutoCommit => 1,
       PrintError => 0,

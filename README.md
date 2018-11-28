@@ -18,7 +18,7 @@ thoroughly so that you don't overlook something!
 3. =)
 
 ### Connection Mysql Database using DBI Module
-1. Changes $user and $password
+1. Change $password strings, pulledpork.pl LINE 1492 (mysql_connect)
 2. Create Database "sfsnort" from Sample_sfsnort.sql
 3. Install DBI Module
 ~~~~
@@ -143,7 +143,13 @@ CREATE TABLE `SRU_index` (
 ## Appendix
 ~~~~
 # mysql -u root -p
+ ENTER: password(root)
 > CREATE DATABASE sfsnort;
+> grant all privileges on sfsnort.* to root@localhost identified by '********';
+> flush privileges;
+> exit;
+# mysql -u root -p sfsnort < Sample_sfsnort.sql
+ ENTER: password(root)
 # mkdir -p /var/log/snort/
 # mkdir -p /var/log/snort/rules/
 # chmod a+x /usr/local/bin/pulledpork/pulledpork.pl
