@@ -181,7 +181,7 @@ CREATE TABLE `SRU_index` (
 # /usr/local/bin/pulledpork/pulledpork.pl -c /etc/snort/pulledpork.conf -h /var/log/snort/sid_changes.log.`date "+%Y%m%d-%H%M%S"` -g
 2. Testing New Rule Detection
 # vi /etc/snort/snort.rules
- Appropriately delete lines (ex. dd)
+ Delete lines roughly (ex. dd)
 3. Processing Only (Using -P Option)
 # /usr/local/bin/pulledpork/pulledpork.pl -c /etc/snort/pulledpork.conf -h /var/log/snort/sid_changes.log.`date "+%Y%m%d-%H%M%S"` -P
 ~~~~
